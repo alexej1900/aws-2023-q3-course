@@ -5,7 +5,7 @@ import { Product } from 'types/types';
 export const handler = async (event: any) => {
     try {
         console.log('helloProductsById', event);
-        const requestedId = event.body.id;
+        const requestedId = event.pathParameters.productId;
         let res:Product;
 
         for(var i=0; i < products.length; i++) {
@@ -13,15 +13,13 @@ export const handler = async (event: any) => {
             if (products[i].id === requestedId) {
                 res = products[i];
 
-                return buildResponse(200, {
-                    product: res,
-                });
+                return buildResponse(200, res);
             }    
         }
 
         if (res === undefined) {
-            return buildResponse(200, {
-                message: 'Product not found',
+            return buildResponse(400, {
+                message: 'Product not found, invalid ID supplied',
             });
         } 
     } catch (error) {

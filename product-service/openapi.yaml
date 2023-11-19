@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: AWS course API schemas
+  description: |-
+    
+  contact:
+    email: alexej1900@gmail.com
+  version: 1.0.0
+servers:
+  - url: https://nwt9l201g9.execute-api.eu-west-1.amazonaws.com
+paths:
+  /products:
+    get:
+      tags:
+        - Products service
+      summary: Returns products list
+      description: Returns an array with objects that containes ID, description, price, title of product 
+      operationId: getProductsList
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Products'
+  /products/{productId}:
+    get:
+      tags:
+        - Products service
+      summary: Finds product item by ID
+      description: Finds product from list of products by specific ID. Returns an object with a single product
+      operationId: getProductsById
+      parameters:
+        - name: productId
+          in: path
+          description: ID of product to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Products'          
+        '400':
+          description: Product not founds
+components:
+  schemas:
+    Products:
+      type: object  
+      properties:
+        id:
+          type: string
+          example: '7567ec4b-b10c-48c5-9345-fc73c48a80aa'
+        description:
+          type: string
+          example: 'Short Product Description1'
+        price:
+          type: integer
+          format: int32
+          example: 24
+        title:
+          type: string
+          example: 'Python For Dummies'
+      xml:
+        name: products

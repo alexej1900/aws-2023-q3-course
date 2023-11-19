@@ -23,10 +23,10 @@ const getProductsList = new NodejsFunction(stack, 'GetProductsListLambda', {
     entry: 'src/handlers/getProductsList.ts'
 })
 
-const getProductsListById = new NodejsFunction(stack, 'GetProductsListByIdLambda', {
+const getProductsById = new NodejsFunction(stack, 'GetProductsByIdLambda', {
     ...sharedLambdaProps,
-    functionName: 'getProductsListById',
-    entry: 'src/handlers/getProductsListById.ts'
+    functionName: 'getProductsById',
+    entry: 'src/handlers/getProductsById.ts'
 })
 
 const api = new apiGateway.HttpApi(stack, 'ProductApi', {
@@ -44,7 +44,7 @@ api.addRoutes({
 })
 
 api.addRoutes({
-    integration: new HttpLambdaIntegration('GetProductsListByIdIntegration', getProductsListById),
+    integration: new HttpLambdaIntegration('GetProductsByIdIntegration', getProductsById),
     path: '/products/{productId}',
     methods: [apiGateway.HttpMethod.GET],
 })

@@ -1,6 +1,6 @@
 import {Product} from '../types/types';
 
-export const buildResponse = (statusCode: number, body: { product?: Product; products?: Product[]; message?: string; }) => ({
+export const buildResponse = (statusCode: number, body: any) => ({
     statusCode: statusCode,
     headers: {
         'Access-Control-Allow-Credentials': true,
