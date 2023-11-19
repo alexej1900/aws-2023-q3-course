@@ -4,7 +4,6 @@ import { Product } from 'types/types';
 
 export const handler = async (event: any) => {
     try {
-        console.log('helloProductsById', event);
         const requestedId = event.pathParameters.productId;
         let res:Product;
 
@@ -19,7 +18,7 @@ export const handler = async (event: any) => {
 
         if (res === undefined) {
             return buildResponse(400, {
-                message: 'Product not found, invalid ID supplied',
+                message: 'Product not found',
             });
         } 
     } catch (error) {
