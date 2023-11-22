@@ -1,0 +1,10 @@
+{ "name": "aws-course-be",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "synth": "cdk synth"
+  },
+  "dependencies": {
+    "cdk": "^2.110.0"
+  }
+}
