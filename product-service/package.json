@@ -6,7 +6,9 @@
   "scripts": {
     "test": "jest",
     "cdk:bootstrap": "cdk bootstrap",
-    "deploy": "cdk deploy"
+    "deploy": "cdk deploy",
+    "db:products:put": "aws dynamodb put-item --table-name products --item",
+    "db:stocks:put": "aws dynamodb put-item --table-name stocks --item"
   },
   "engines": {
     "node": ">=14.15.0"
