@@ -5,6 +5,5 @@ jspm_packages
 # esbuild directories
 .esbuild
 
-cdk.out
-
 .env
+cdk.out
