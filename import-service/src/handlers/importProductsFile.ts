@@ -14,16 +14,16 @@ export async function handler(
 
   if (!fileName) {
     return buildResponse(400, {
-      message: "Missing required paramater - file name",
+      message: "File name is required",
     });
   }
 
   const client = new S3Client({ region: process.env.PRODUCT_AWS_REGION! });
-  const filePatch = `uploaded/${fileName}`;
+  const objectKey = `uploaded/${fileName}`;
 
   const putCommand = new PutObjectCommand({
     Bucket: bucket,
-    Key: filePatch,
+    Key: objectKey,
     ContentType: "text/csv",
   });
 

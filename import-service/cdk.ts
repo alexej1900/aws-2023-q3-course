@@ -52,7 +52,7 @@ uploadBucket.grantReadWrite(importProductsFile);
 const importFileParser = new NodejsFunction(stack, "ImportFileParserLambda", {
   ...lambdaProps,
   functionName: "importFileParser",
-  entry: "src//handlers/importFileParser.ts",
+  entry: "src/handlers/importFileParser.ts",
 });
 
 uploadBucket.grantReadWrite(importFileParser);

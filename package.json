@@ -1,1 +1,1 @@
-{"name":"aws-course-be","version":"1.0.0","private":true,"scripts":{"synth":"cdk synth"},"dependencies":{"cdk":"^2.110.0","csv-parser":"^3.0.0"},"devDependencies":{"@types/node":"^20.10.0"}}
+{"name":"aws-course-be","version":"1.0.0","private":true,"scripts":{"synth":"cdk synth"},"dependencies":{"@aws-sdk/util-stream-node":"^3.374.0","aws-sdk-client-mock":"^3.0.0","cdk":"^2.110.0","csv-parser":"^3.0.0"},"devDependencies":{"@types/node":"^20.10.0"}}
