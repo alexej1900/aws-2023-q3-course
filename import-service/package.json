@@ -21,6 +21,7 @@
     "@aws-cdk/aws-lambda-nodejs": "^1.204.0",
     "@aws-sdk/client-dynamodb": "^3.454.0",
     "@aws-sdk/client-s3": "^3.456.0",
+    "@aws-sdk/client-sns": "^3.468.0",
     "@aws-sdk/lib-dynamodb": "^3.454.0",
     "@aws-sdk/s3-request-presigner": "^3.461.0",
     "@babel/preset-env": "^7.23.3",
@@ -29,6 +30,7 @@
     "aws-sdk": "^2.1502.0",
     "cdk": "^2.110.0",
     "csv-parser": "^3.0.0",
+    "dotenv": "^16.3.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
