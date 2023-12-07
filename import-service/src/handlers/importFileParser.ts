@@ -8,10 +8,17 @@ import {
 import { Readable } from "stream";
 import csv from "csv-parser";
 import { buildResponse } from "../utils/utils";
+import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
+import { config } from "dotenv";
+
+config();
 
 export async function handler(event: S3Event) {
-  const bucket = event.Records[0].s3.bucket.name;
-  const key = event.Records[0].s3.object.key;
+  const recrds = event.Records;
+  if (!recrds.length) throw new Error('No records found');
+
+  const bucket = recrds[0].s3.bucket.name;
+  const key = recrds[0].s3.object.key;
   const splitKey = key.split("/");
   const fileName = splitKey[splitKey.length - 1];
 
@@ -22,8 +29,10 @@ export async function handler(event: S3Event) {
   }
 
   const client = new S3Client({ region: process.env.PRODUCT_AWS_REGION! });
+  const sqsClient = new SQSClient({ region: process.env.PRODUCT_AWS_REGION! });
 
   try {
+
     const params = {
       Bucket: bucket,
       Key: key,
@@ -36,9 +45,7 @@ export async function handler(event: S3Event) {
     };
 
     const getObjectCommand = new GetObjectCommand(params);
-
     const copyObjectCommand = new CopyObjectCommand(copyParams);
-
     const deleteObjectCommand = new DeleteObjectCommand(params);
 
     const { Body } = await client.send(getObjectCommand);
@@ -49,31 +56,40 @@ export async function handler(event: S3Event) {
 
     const stream = Body as Readable;
 
-    const streamEnd = new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       stream
         .pipe(csv())
-        .on("data", (record) => {
+        .on("data", async (record) => {
           console.log("CSV file Row:", record);
+          stream.pause();
+          try {
+            await sqsClient.send(
+              new SendMessageCommand({
+                QueueUrl: process.env.SQS_URL!,
+                MessageBody: JSON.stringify(record),
+              })
+            );
+            console.log(`Message to SQS -> ${process.env.SQS_URL!}`, record);
+          } catch (err) {
+            console.log(`Error message to SQS -> ${process.env.SQS_URL}`, record);
+            reject(err);
+          }
+
+          stream.resume();
         })
         .on("end", async () => {
           console.log("CSV file parsing finished");
-          try {
-            await client.send(copyObjectCommand);
-            console.log("Sending parsed file to parsed folder");
-            await client.send(deleteObjectCommand);
-            console.log("Deleting file from uploaded folder");
-            resolve(null);
-          } catch (err) {
-            reject(err);
-          }
+          const copyObject = await client.send(copyObjectCommand);
+          console.log("Objects copied to folder /parsed:", copyObject);
+          const deleteObject = await client.send(deleteObjectCommand);
+          console.log("Objects deleted from folder /uploaded:", deleteObject);
+          resolve(null);
         })
         .on("error", (error) => {
           console.error("CSV file Parse Error:", error);
           reject(error);
         });
     });
-
-    await streamEnd;
 
     return buildResponse(200, {
       message: "Parsed successful",

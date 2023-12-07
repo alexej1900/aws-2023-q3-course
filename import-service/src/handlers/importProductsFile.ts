@@ -2,6 +2,9 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { buildResponse } from "../utils/utils";
+import { config } from "dotenv";
+
+config();
 
 export async function handler(
   event: APIGatewayProxyEvent
@@ -10,7 +13,7 @@ export async function handler(
 
   const fileName = event.queryStringParameters?.name;
 
-  const bucket = "aws-import-bucket";
+  const bucket = process.env.IMPORT_BUCKET_NAME!;
 
   if (!fileName) {
     return buildResponse(400, {

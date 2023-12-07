@@ -8,6 +8,10 @@ import {
 } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apiGateway from "@aws-cdk/aws-apigatewayv2-alpha";
 import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import { config } from "dotenv";
+
+config();
 
 const app = new cdk.App();
 
@@ -18,14 +22,17 @@ const stack = new cdk.Stack(app, "ImportServiceStack", {
 const uploadBucket = s3.Bucket.fromBucketName(
   stack,
   "ImportBucket",
-  "aws-import-bucket"
+  process.env.IMPORT_BUCKET_NAME!,
 );
+
+const importQueue = sqs.Queue.fromQueueArn(stack, 'importQueue', process.env.SQS_ARN!);
 
 const lambdaProps: Partial<NodejsFunctionProps> = {
   runtime: lambda.Runtime.NODEJS_18_X,
   environment: {
     PRODUCT_AWS_REGION: process.env.PRODUCT_AWS_REGION!,
     BUCKET_NAME: "uploadproducts",
+    SQS_URL: importQueue.queueUrl,
   },
 };
 
@@ -47,15 +54,16 @@ const importProductsFile = new NodejsFunction(
   }
 );
 
-uploadBucket.grantReadWrite(importProductsFile);
-
 const importFileParser = new NodejsFunction(stack, "ImportFileParserLambda", {
   ...lambdaProps,
   functionName: "importFileParser",
   entry: "src/handlers/importFileParser.ts",
 });
 
+uploadBucket.grantReadWrite(importProductsFile);
 uploadBucket.grantReadWrite(importFileParser);
+uploadBucket.grantDelete(importFileParser);
+importQueue.grantSendMessages(importFileParser);
 
 uploadBucket.addEventNotification(
   s3.EventType.OBJECT_CREATED,
@@ -72,7 +80,7 @@ api.addRoutes({
   methods: [apiGateway.HttpMethod.GET],
 });
 
-new cdk.CfnOutput(stack, "Import service Url", {
-  value: `${api.url}import`,
-  description: `Import service API URL`,
-});
+// new cdk.CfnOutput(stack, "Import service Url", {
+//   value: `${api.url}import`,
+//   description: `Import service API URL`,
+// });
