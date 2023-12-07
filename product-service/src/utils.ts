@@ -1,4 +1,3 @@
-import {Product} from '../types/types';
 
 export const buildResponse = (statusCode: number, body: any) => ({
     statusCode: statusCode,

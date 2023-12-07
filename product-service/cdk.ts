@@ -18,6 +18,7 @@ config();
 
 const app = new cdk.App();
 const EMAIL = process.env.BIG_STACK_EMAIL as string;
+const ADDITIONAL_EMAIL = process.env.ADDITIONAL_EMAIL as string;
 
 const stack = new cdk.Stack(app, "AWSProductServiseStack", {
   env: { region: process.env.PRODUCT_AWS_REGION! },
@@ -35,10 +36,16 @@ new sns.Subscription(stack, 'CreateProductTopicSubscription', {
   endpoint: EMAIL,
   protocol: sns.SubscriptionProtocol.EMAIL,
   topic: importProductTopic,
+})
+
+new sns.Subscription(stack, "CreateProductTopicLowCountSubscription", {
+  topic: importProductTopic,
+  protocol: sns.SubscriptionProtocol.EMAIL,
+  endpoint: ADDITIONAL_EMAIL,
   filterPolicy: {
     count: sns.SubscriptionFilter.numericFilter({ greaterThan: 5 }),
   },
-})
+});
 
 const productsTable = dynamodb.Table.fromTableName(stack, 'ProductsTable', `products`);
 const stocksTable = dynamodb.Table.fromTableName(stack, 'StocksTable', `stocks`);

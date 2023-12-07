@@ -2,9 +2,9 @@ import { PublishCommand } from "@aws-sdk/client-sns";
 import { createProduct } from "../libs/createProduct";
 import { snsClient } from "../libs/snsClient";
 import { v4 as uuidv4 } from "uuid";
-import { buildResponse } from 'src/utils';
+import { buildResponse } from '../utils';
 
-export const handler = async (event) => {
+export const handler = async (event: { Records: any; }) => {
     try {
         console.log('sqs event', event);
 
@@ -26,7 +26,7 @@ export const handler = async (event) => {
 
             const newProductsData = await createProduct(product);
 
-            console.log(newProductsData);
+            console.log('Created products', newProductsData);
 
             await snsClient.send(
                 new PublishCommand({
@@ -43,7 +43,10 @@ export const handler = async (event) => {
             );
         }
 
-        return buildResponse(200, Records);
+        return buildResponse(200, {
+            message: "Created " + Records.length + " products",
+            Records,
+          });
 
     } catch (err) {
         console.log(err);

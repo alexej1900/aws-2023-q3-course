@@ -34,17 +34,18 @@ describe('Handler that returns one product by ID in request', () => {
         const result = await handler(event);
 
         expect(result.body).toEqual(JSON.stringify({
-            description: "Short Python For Dummies Description",
             id: "7567ec4b-b10c-48c5-9345-fc73c48a80aa",
-            price: 24,
+            description: "Short Python For Dummies Description",
+            price: "24",
             title: "Python For Dummies",
+            count: "2"
         }));
     });
 
     test('return error message with wrong ID', async () => {
         const event: APIGatewayProxyEvent = {
             pathParameters: {
-                productId: "aaa"
+                productId: "erwerwerwe"
             }
         } as any
         const result = await handler(event);

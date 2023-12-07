@@ -69,9 +69,9 @@ export async function handler(event: S3Event) {
                 MessageBody: JSON.stringify(record),
               })
             );
-            console.log(`Message to SQS -> ${process.env.SQS_URL!}`, record);
+            console.log(`Message sent to SQS`, record);
           } catch (err) {
-            console.log(`Error message to SQS -> ${process.env.SQS_URL}`, record);
+            console.log(`Error message to SQS`, record);
             reject(err);
           }
 
