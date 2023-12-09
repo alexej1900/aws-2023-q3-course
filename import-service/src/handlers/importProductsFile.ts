@@ -13,7 +13,7 @@ export async function handler(
 
   const fileName = event.queryStringParameters?.name;
 
-  const bucket = process.env.IMPORT_BUCKET_NAME!;
+  const bucket = "aws-import-bucket";
 
   if (!fileName) {
     return buildResponse(400, {
@@ -21,7 +21,7 @@ export async function handler(
     });
   }
 
-  const client = new S3Client({ region: process.env.PRODUCT_AWS_REGION! });
+  const client = new S3Client({ region: "eu-west-1" });
   const objectKey = `uploaded/${fileName}`;
 
   const putCommand = new PutObjectCommand({

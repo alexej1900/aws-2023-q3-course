@@ -31,7 +31,7 @@ const lambdaProps: Partial<NodejsFunctionProps> = {
   runtime: lambda.Runtime.NODEJS_18_X,
   environment: {
     PRODUCT_AWS_REGION: process.env.PRODUCT_AWS_REGION!,
-    BUCKET_NAME: "uploadproducts",
+    BUCKET_NAME: process.env.IMPORT_BUCKET_NAME!,
     SQS_URL: importQueue.queueUrl,
   },
 };
@@ -80,7 +80,7 @@ api.addRoutes({
   methods: [apiGateway.HttpMethod.GET],
 });
 
-// new cdk.CfnOutput(stack, "Import service Url", {
-//   value: `${api.url}import`,
-//   description: `Import service API URL`,
-// });
+new cdk.CfnOutput(stack, "Import service Url", {
+  value: `${api.url}import`,
+  description: `Import service API URL`,
+});
