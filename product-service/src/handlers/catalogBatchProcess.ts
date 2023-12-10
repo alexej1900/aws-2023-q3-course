@@ -8,20 +8,19 @@ export const handler = async (event: { Records: any; }) => {
     try {
         console.log('sqs event', event);
 
-        const { Records } = event;
+        const Records = event.Records;
 
         for (const record of Records) {
             const data = JSON.parse(record.body);
 
-            const { description, title, price, count } = data;
-
+            const { Description, Title, Price, Count } = data;
             const uuid = uuidv4();
             const product = {
                 id: uuid,
-                description,
-                title,
-                price: Number(price),
-                count: Number(count),
+                title: Title,
+                description: Description,
+                price: Number(Price),
+                count: Number(Count),
             };
 
             const newProductsData = await createProduct(product);

@@ -65,7 +65,7 @@ export async function handler(event: S3Event) {
           try {
             await sqsClient.send(
               new SendMessageCommand({
-                QueueUrl: process.env.SQS_URL!,
+                QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/234423678193/catalogItemsQueue',
                 MessageBody: JSON.stringify(record),
               })
             );

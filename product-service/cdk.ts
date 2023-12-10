@@ -17,8 +17,6 @@ import { config } from "dotenv";
 config();
 
 const app = new cdk.App();
-const EMAIL = process.env.BIG_STACK_EMAIL as string;
-const ADDITIONAL_EMAIL = process.env.ADDITIONAL_EMAIL as string;
 
 const stack = new cdk.Stack(app, "AWSProductServiseStack", {
   env: { region: process.env.PRODUCT_AWS_REGION! },
@@ -28,20 +26,20 @@ const importQueue = new sqs.Queue(stack, 'CatalogItemsQueue', {
   queueName: 'catalogItemsQueue',
 });
 
-const importProductTopic = new sns.Topic(stack, 'CreateProductTopic ', {
-  topicName: 'createProductTopic',
+const importProductTopic = new sns.Topic(stack, 'CreateProductsTopic', {
+  topicName: 'createProductsTopic',
 });
 
 new sns.Subscription(stack, 'CreateProductTopicSubscription', {
-  endpoint: EMAIL,
+  endpoint: process.env.BIG_STACK_EMAIL as string,
   protocol: sns.SubscriptionProtocol.EMAIL,
   topic: importProductTopic,
 })
 
-new sns.Subscription(stack, "CreateProductTopicLowCountSubscription", {
+new sns.Subscription(stack, "CreateProductTopicBigCountSubscription", {
   topic: importProductTopic,
   protocol: sns.SubscriptionProtocol.EMAIL,
-  endpoint: ADDITIONAL_EMAIL,
+  endpoint: process.env.ADDITIONAL_EMAIL as string,
   filterPolicy: {
     count: sns.SubscriptionFilter.numericFilter({ greaterThan: 5 }),
   },
@@ -63,9 +61,10 @@ const sharedLambdaProps: Partial<NodejsFunctionProps> = {
 };
 
 const dynamoDBPolicy = new iam.PolicyStatement({
-    actions: ["dynamodb:Scan", "dynamodb:Query", "dynamodb:GetItem", "dynamodb:PutItem"],
-    resources: ["*"],
-})
+  effect: iam.Effect.ALLOW,
+  actions: ["dynamodb:Scan", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Query"],
+  resources: ["*"],
+});
 
 const getProductsList = new NodejsFunction(stack, "GetProductsListLambda", {
   ...sharedLambdaProps,
@@ -97,6 +96,7 @@ catalogBatchProcess.addEventSource(new SqsEventSource(importQueue, { batchSize: 
 getProductsById.addToRolePolicy(dynamoDBPolicy)
 getProductsList.addToRolePolicy(dynamoDBPolicy)
 createProduct.addToRolePolicy(dynamoDBPolicy)
+catalogBatchProcess.addToRolePolicy(dynamoDBPolicy)
 
 const api = new apiGateway.HttpApi(stack, "ProductApi", {
   corsPreflight: {

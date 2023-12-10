@@ -1,7 +1,12 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocument, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient, TransactWriteItemsCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+
+import { config } from "dotenv";
+
+config();
 
 const client = new DynamoDBClient({});
+
 const docClient = DynamoDBDocument.from(client);
 
 export const createProduct = async (product: {
@@ -12,35 +17,37 @@ export const createProduct = async (product: {
         count: number;
     }) => {
 
+    const transactItems = [
+        {
+            Put: {
+            TableName: "products",
+                Item: {
+                    id: { S: product.id, }, 
+                    title:{ S: product.title },
+                    description: { S: product.description },
+                    price: { N: product.price.toString() },
+                },
+            },
+        },
+        {
+            Put: {
+                TableName: "stocks",
+                Item: {
+                    product_id: { S: product.id, },
+                    count: { N: product.count.toString() },
+                },
+            },
+        },
+    ];
+
     try {
-        return await docClient.send(
-        new TransactWriteCommand({
-            TransactItems: [
-            {
-                Put: {
-                TableName: "products",
-                Item: {
-                    id: product.id,
-                    title: product.title,
-                    description: product.description,
-                    price: product.price,
-                },
-                },
-            },
-            {
-                Put: {
-                TableName: "Stock",
-                Item: {
-                    product_id: product.id,
-                    count: product.count,
-                },
-                },
-            },
-            ],
-        })
-        );
+        const command = new TransactWriteItemsCommand({ TransactItems: transactItems });
+        const products = await docClient.send(command);
+
+        console.log("TransactWriteCommand products", products);
+        return ({...product})
     } catch (err) {
-        console.log(err);
+        console.log("TransactWriteCommand", err);
         return err;
     }
 };
