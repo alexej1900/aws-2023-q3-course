@@ -35,8 +35,8 @@ export const handler = async (event: any) => {
     console.log("product:", product);
     console.log("stock:", stock);
 
-    if (!product) {
-      return buildResponse(400, "Product not found")
+    if (!product.Items.length) {
+      return buildResponse(400, { message: "Product not found"})
     }
 
     const formattedProduct = formatData(product)
