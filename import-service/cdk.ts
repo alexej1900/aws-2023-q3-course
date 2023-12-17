@@ -9,6 +9,7 @@ import {
 import * as apiGateway from "@aws-cdk/aws-apigatewayv2-alpha";
 import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import * as sqs from "aws-cdk-lib/aws-sqs";
+import { HttpLambdaAuthorizer, HttpLambdaResponseType } from '@aws-cdk/aws-apigatewayv2-authorizers-alpha';
 import { config } from "dotenv";
 
 config();
@@ -54,6 +55,24 @@ const importProductsFile = new NodejsFunction(
   }
 );
 
+const basicAuthorizer = lambda.Function.fromFunctionArn(
+  stack,
+  'basicAuthorizer',
+  process.env.AUTHORIZER_ARN!,
+);
+
+const authorizer = new HttpLambdaAuthorizer('Authorizer', basicAuthorizer, {
+  responseTypes: [HttpLambdaResponseType.IAM],
+  resultsCacheTtl: cdk.Duration.seconds(0),
+});
+
+new lambda.CfnPermission(stack, 'BasicAuthorizerPermission', {
+  action: 'lambda:InvokeFunction',
+  functionName: basicAuthorizer.functionName,
+  principal: 'apigateway.amazonaws.com',
+  sourceAccount: stack.account,
+});
+
 const importFileParser = new NodejsFunction(stack, "ImportFileParserLambda", {
   ...lambdaProps,
   functionName: "importFileParser",
@@ -78,6 +97,7 @@ api.addRoutes({
   ),
   path: "/import",
   methods: [apiGateway.HttpMethod.GET],
+  authorizer,
 });
 
 new cdk.CfnOutput(stack, "Import service Url", {
