@@ -1,8 +1,14 @@
+import { APIGatewayTokenAuthorizerEvent, APIGatewayAuthorizerResult } from "aws-lambda";
+import { config } from "dotenv";
 
-import { APIGatewayTokenAuthorizerEvent } from "aws-lambda";
+config();
 
-export async function handler(event: APIGatewayTokenAuthorizerEvent) {
+
+export const handler = async(event: APIGatewayTokenAuthorizerEvent) => {
   console.log('Authorizer event', JSON.stringify(event));
+
+  const TestUserName = 'alexej1900';
+  const TestserPassword = 'TEST_PASSWORD';
 
   let authToken: string = '';
   let effect: 'Deny' | 'Allow' = 'Deny';
@@ -10,29 +16,81 @@ export async function handler(event: APIGatewayTokenAuthorizerEvent) {
 
   try {
     authToken = event.authorizationToken || '';
+
+    console.log( `authToken ${authToken}`);
+
     methodArn = event.methodArn;
     if (!authToken) {
-      return generatePolicy(authToken, effect, methodArn);
+      return generatePolicy(authToken, methodArn, effect);
     }
 
     const [authType, encodedToken] = authToken.split(' ');
+    console.log( `AuthType ${authType}, EncodedToken ${encodedToken}`);
+
     if (authType !== 'Basic' || !encodedToken) {
-      return generatePolicy(authToken, effect, methodArn);
+      return generatePolicy(authToken, methodArn, effect);
     }
 
-    const buff = Buffer.from(authToken, 'base64');
+    const buff = Buffer.from(encodedToken, 'base64');
     const plainCreds = buff.toString('utf-8').split(':');
+
     const username = plainCreds[0];
     const password = plainCreds[1];
 
     console.log(`user: ${username}, password: ${password}`);
 
-    const storedUserPassword = process.env[username];
-    effect = !storedUserPassword || storedUserPassword != password ? 'Deny' : 'Allow';
+    const storedUserPassword = process.env.CREDENTIALS;
+    console.log(`storedUserPassword: ${storedUserPassword}`);
 
-    const policy = generatePolicy(authToken, event.methodArn, effect);
+    effect = username === TestUserName && password === TestserPassword ?  'Allow' : 'Deny';
 
-    return policy;
+    // effect = !storedUserPassword || storedUserPassword != password ? 'Deny' : 'Allow';
+    
+
+    if (effect === "Allow") {
+      console.log(`effect: ${JSON.stringify({
+        principalId: 'user',
+        policyDocument: {
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Action: 'execute-api:Invoke',
+              Effect: 'Allow',
+              Resource: event.methodArn,
+            },
+          ],
+        },
+      })}`);
+
+      return {
+        principalId: 'user',
+        policyDocument: {
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Action: 'execute-api:Invoke',
+              Effect: 'Allow',
+              Resource: event.methodArn,
+            },
+          ],
+        },
+      };
+    } else {
+      return {
+        principalId: 'user',
+        policyDocument: {
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Action: 'execute-api:Invoke',
+              Effect: 'Deny',
+              Resource: event.methodArn,
+            },
+          ],
+        },
+      };
+    }
+    
   } catch (error: any) {
     console.log('Authorization error', error);
     return generatePolicy(authToken, event.methodArn, effect);
@@ -40,7 +98,11 @@ export async function handler(event: APIGatewayTokenAuthorizerEvent) {
   
 }
 
-const generatePolicy = (principalId, resource, effect = 'Allow') => {
+const generatePolicy = (
+    principalId: string, 
+    resource: string, 
+    effect: 'Allow' | 'Deny'
+  ): APIGatewayAuthorizerResult => {
   return {
     principalId: principalId,
     policyDocument: {
@@ -49,7 +111,7 @@ const generatePolicy = (principalId, resource, effect = 'Allow') => {
         {
           Action: 'execute-api: Invoke',
           Effect: effect, 
-          Resource: [resource],
+          Resource: resource,
         }
       ]
     }

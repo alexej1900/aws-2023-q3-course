@@ -72,6 +72,7 @@ const getProductsList = new NodejsFunction(stack, "GetProductsListLambda", {
   entry: "src/handlers/getProductsList.ts",
 });
 
+
 const getProductsById = new NodejsFunction(stack, "GetProductsByIdLambda", {
   ...sharedLambdaProps,
   functionName: "getProductsById",
